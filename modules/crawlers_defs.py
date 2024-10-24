@@ -203,21 +203,15 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                         self.switch_to.window(str_report_handle)
                         # wait report
                         self._wait_element(By.XPATH, f"//div[contains(text(), {report.name})]")
+                        time.sleep(1)
                         # download and wait
-                        try:
-                            # WebDriverWait(self, 20).until(lambda driver: driver.execute_script(f'return typeof $find !== "undefined";'))
-                            self._wait_element(By.XPATH, '//table[@title="Export drop down menu"]').click()
-                            self._wait_element(By.XPATH, '//a[@title="Excel"]').click()
-                            # self.execute_script("$find('ReportViewer1').exportReport('EXCELOPENXML');")
-                        except JavascriptException:
-                            self._wait_element(By.XPATH, f"//div[contains(text(), {report.name})]")
-                            time.sleep(5)
-                            self._wait_element(By.XPATH, '//table[@title="Export drop down menu"]').click()
-                            self._wait_element(By.XPATH, '//a[@title="Excel"]').click()
-                            # self.execute_script("$find('ReportViewer1').exportReport('EXCELOPENXML');")
+                        self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_ButtonLink').click()
+                        time.sleep(1)
+                        self._wait_element(By.XPATH, '//a[@title="Excel"]').click()
+                        time.sleep(1)
                     # Wait for download
                     while not os.path.exists(report.old_path):
-                        time.sleep(3)
+                        time.sleep(2)
                     time.sleep(1)
                     fn_log(f"{self._index}:{report.old_path} downloaded!!")
                     # switch to main
