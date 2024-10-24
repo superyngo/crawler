@@ -193,26 +193,32 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                                 print('Missing procedure definition')
                                 pass
                     # fetch report
+                    _int_current_windows_handles = len(self.window_handles)
                     self._wait_element(By.ID, "btnQuery").click()
                     # check if direct download
                     if report.show_report:
+                        while len(self.window_handles) == _int_current_windows_handles:
+                            time.sleep(1)
                         str_report_handle = self.window_handles[-1]
                         self.switch_to.window(str_report_handle)
                         # wait report
                         self._wait_element(By.XPATH, f"//div[contains(text(), {report.name})]")
-                        time.sleep(1)
                         # download and wait
                         try:
-                            self._wait_element(By.XPATH, f"//div[contains(text(), {report.name})]")
-                            self.execute_script("$find('ReportViewer1').exportReport('EXCELOPENXML');")
+                            # WebDriverWait(self, 20).until(lambda driver: driver.execute_script(f'return typeof $find !== "undefined";'))
+                            self._wait_element(By.XPATH, '//table[@title="Export drop down menu"]').click()
+                            self._wait_element(By.XPATH, '//a[@title="Excel"]').click()
+                            # self.execute_script("$find('ReportViewer1').exportReport('EXCELOPENXML');")
                         except JavascriptException:
                             self._wait_element(By.XPATH, f"//div[contains(text(), {report.name})]")
                             time.sleep(5)
-                            self.execute_script("$find('ReportViewer1').exportReport('EXCELOPENXML');")
+                            self._wait_element(By.XPATH, '//table[@title="Export drop down menu"]').click()
+                            self._wait_element(By.XPATH, '//a[@title="Excel"]').click()
+                            # self.execute_script("$find('ReportViewer1').exportReport('EXCELOPENXML');")
                     # Wait for download
                     while not os.path.exists(report.old_path):
                         time.sleep(3)
-                    time.sleep(3)
+                    time.sleep(1)
                     fn_log(f"{self._index}:{report.old_path} downloaded!!")
                     # switch to main
                     if report.show_report:
