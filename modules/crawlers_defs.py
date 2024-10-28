@@ -203,12 +203,18 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                         self.switch_to.window(str_report_handle)
                         # wait report
                         self._wait_element(By.XPATH, f"//div[contains(text(), {report.name})]")
-                        time.sleep(1)
+                        time.sleep(3)
                         # download and wait
-                        self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_ButtonLink').click()
+                        self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_Button').click()
                         time.sleep(1)
-                        self._wait_element(By.XPATH, '//a[@title="Excel"]').click()
-                        time.sleep(1)
+                        try:
+                            self._wait_element(By.XPATH, '//a[@title="Excel"]', 3).click()
+                            time.sleep(1)
+                        except TimeoutException:
+                            self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_Button').click()
+                            time.sleep(1)
+                            self._wait_element(By.XPATH, '//a[@title="Excel"]').click()
+                            time.sleep(1)
                     # Wait for download
                     while not os.path.exists(report.old_path):
                         time.sleep(2)

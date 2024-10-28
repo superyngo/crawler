@@ -83,11 +83,17 @@ def main():
     print(f"input tasks: {set(tasks)}")
     # config = tasks['config'] if 'config' in 
     for task, config in tasks.items():
-      if task == 'stop': 
-        handle_stop = True
-        break
-      if task:cht_multi_crawler.crawling_main(**(configs[task]|config))
-
+      match task:
+        case 'stop':
+          handle_stop = True
+          break
+        case 'debug':
+          breakpoint()
+          pass
+        case None:
+          pass
+        case _:
+          cht_multi_crawler.crawling_main(**(configs[task]|config))
   cht_multi_crawler.threads = 0
   fn_log("All jobs done!!")
 

@@ -57,16 +57,23 @@ def main():
         'MSG': lst_source_MSG_reports,
         'MASIS_InvQry': ['50503', '59511', '59512', '59521', '59531']
       }
+    tasks = ""
     tasks = convert_string_to_dict(input(f"tasks:\n {"\n ".join(configs.keys())}\nor stop:"))
     print(f"input tasks: {set(tasks)}")
     # config = tasks['config'] if 'config' in 
     for task, source in tasks.items():
-      if task == 'stop': 
-        handle_stop = True
-        break
-      if task:
-        if task not in cht_crawler._loaded_components: cht_crawler.load_components(task)
-        getattr(cht_crawler, task + '_handler')(source if source else configs.get(task))
+      match task:
+        case 'stop':
+          handle_stop = True
+          break
+        case 'debug':
+          breakpoint()
+          pass
+        case None:
+          pass
+        case _:
+          if task not in cht_crawler._loaded_components: cht_crawler.load_components(task)
+          getattr(cht_crawler, task + '_handler')(source if source else configs.get(task))
   fn_log("Jobs done!!")
   cht_crawler.close()
   cht_crawler.quit()
@@ -75,3 +82,5 @@ if __name__ == "__main__":
     main()
 
 
+# cht_crawler.load_components('MSG')
+# cht_crawler.MSG_handler(source=[{'name' : 'RS4107RA4L'}], handle_check_online=False)
