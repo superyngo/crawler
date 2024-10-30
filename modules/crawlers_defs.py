@@ -205,15 +205,15 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                         self._wait_element(By.XPATH, f"//div[contains(text(), {report.name})]")
                         time.sleep(3)
                         # download and wait
-                        self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_Button').click()
+                        self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_Button', condition=EC.element_to_be_clickable).click()
                         time.sleep(1)
                         try:
-                            self._wait_element(By.XPATH, '//a[@title="Excel"]', 3).click()
+                            self._wait_element(By.XPATH, '//a[@title="Excel"]', 3, condition=EC.element_to_be_clickable).click()
                             time.sleep(1)
                         except TimeoutException:
-                            self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_Button').click()
+                            self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_Button', condition=EC.element_to_be_clickable).click()
                             time.sleep(1)
-                            self._wait_element(By.XPATH, '//a[@title="Excel"]').click()
+                            self._wait_element(By.XPATH, '//a[@title="Excel"]', condition=EC.element_to_be_clickable).click()
                             time.sleep(1)
                     # Wait for download
                     while not os.path.exists(report.old_path):
@@ -732,7 +732,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             '外幣': ['EPIS_contract_batch', ['id', '契約編號', '批次', '約定履約日期', '履約日期', '"履約金額(含稅)"', '進口匯率', '匯率日期', '履約明細金額總計', '器材款FCA', '交貨總金額', '成本分析表總價', '換算比例', '幣別']],
             '類型有誤': None,
             '點收單': ['EPIS_contract_batch_Pick', ['契約編號', '批次', '點收單號', '代建物品增加單', '收貨單位', '點收員工']],
-            '收料單': ['EPIS_contract_batch_RS2901RA4L', ['契約編號', '批次'',' '庫號', '庫名', '收料單號', '到料日期']],
+            '收料單': ['EPIS_contract_batch_RS2901RA4L', ['契約編號', '批次', '庫號', '庫名', '收料單號', '到料日期']],
             '請款單': ['EPIS_contract_batch_RSapay', ['契約編號', '批次', '往請款作業', '請款單號', '類別', '狀態']]
         }
         def  _EPIS_contract_batch_save_db(self, dict_contract_batches: dict) -> None:
@@ -740,19 +740,19 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             for key, value in data.items():
                 if value:
                     [tablename, columns_name] = self._dic_EPIS_contract_batch_db_names[postfix] if key == 'info' else self._dic_EPIS_contract_batch_db_names[key]
-                with DatabaseManager(DB_PATH) as db:
-                    # Prepare the SQL query
-                    lst_sql_columns = columns_name
-                    insert_replace_sql = f'''
-                    INSERT OR REPLACE INTO {tablename} (
-                        {','.join(lst_sql_columns)}
-                    ) VALUES ({",".join(["?"] * len(lst_sql_columns))})
-                    '''
-                    # DELETE operation
-                    db.execute_query(f"DELETE FROM {tablename} WHERE 契約編號 = '{contract}'")
-                    # Iterate over the list and execute the query for each record
-                    db.execute_many(insert_replace_sql , value)
-                    fn_log(f"{self._index}: contract batches saved to db {tablename}")
+                    with DatabaseManager(DB_PATH) as db:
+                        # Prepare the SQL query
+                        lst_sql_columns = columns_name
+                        insert_replace_sql = f'''
+                        INSERT OR REPLACE INTO {tablename} (
+                            {','.join(lst_sql_columns)}
+                        ) VALUES ({",".join(["?"] * len(lst_sql_columns))})
+                        '''
+                        # DELETE operation
+                        db.execute_query(f"DELETE FROM {tablename} WHERE 契約編號 = '{contract}'")
+                        # Iterate over the list and execute the query for each record
+                        db.execute_many(insert_replace_sql , value)
+                        fn_log(f"{self._index}: contract batches saved to db {tablename}")
         return vars()
     def sharepoint() -> dict[str, any]:
         _sharepoint_base_url = 'https://cht365.sharepoint.com/sites/msteams_e919c5/Shared Documents/General/存控/0_DB/'

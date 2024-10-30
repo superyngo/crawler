@@ -230,9 +230,9 @@ class CsMyDriverComponent:
         _input_element = WebDriverWait(self, 20).until(EC.element_to_be_clickable((By_locator, locator)))
         _input_element.clear()
         _input_element.send_keys(new_value)
-    def _wait_element(self, By_locator: str, locator: str, time: int = 1000):
+    def _wait_element(self, By_locator: str, locator: str, time: int = 1000, condition=EC.presence_of_element_located):
         try:
-            return WebDriverWait(self, time).until(EC.element_to_be_clickable((By_locator, locator)))
+            return WebDriverWait(self, time).until(condition((By_locator, locator)))
         except UnexpectedAlertPresentException:
             try:
                 self.switch_to.alert.accept()
