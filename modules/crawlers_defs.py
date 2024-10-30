@@ -621,7 +621,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                     dict_contract_batches['postfix'] = '類型有誤'
                 # Save Contract Batch
                 self._EPIS_contract_batch_save_db(dict_contract_batches)
-                fn_log(f"{self._index}:{contract} batches info saved!! {int_finished_count} of {int_total} finished")
+                fn_log(f"{self._index}:{contract} batches data saved!! {int_finished_count} of {int_total} finished")
             fn_log(f"{self._index}: contract batches finished!")
             return
         def _EPIS_contract_batch_query_contract(self, contract: str):
@@ -752,7 +752,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                         db.execute_query(f"DELETE FROM {tablename} WHERE 契約編號 = '{contract}'")
                         # Iterate over the list and execute the query for each record
                         db.execute_many(insert_replace_sql , value)
-                        fn_log(f"{self._index}: contract batches saved to db {tablename}")
+                        fn_log(f"{self._index}: {contract} {key} saved to db {tablename}")
         return vars()
     def sharepoint() -> dict[str, any]:
         _sharepoint_base_url = 'https://cht365.sharepoint.com/sites/msteams_e919c5/Shared Documents/General/存控/0_DB/'
