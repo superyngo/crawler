@@ -1,7 +1,7 @@
 import importlib
-import data.source_contracts
-import data.source_items
-import data.source_MSG_Reports
+import database.source_contracts
+import database.source_items
+import database.source_MSG_Reports
 from modules.crawlers_defs import * 
 
 def convert_string_to_dict(input_string):
@@ -39,12 +39,12 @@ def main():
 
   handle_stop = False
   while not handle_stop:
-    importlib.reload(data.source_contracts)
-    importlib.reload(data.source_items)
-    importlib.reload(data.source_MSG_Reports)
-    from data.source_contracts import lst_source_contracts
-    from data.source_items import lst_items
-    from data.source_MSG_Reports import lst_source_MSG_reports
+    importlib.reload(database.source_contracts)
+    importlib.reload(database.source_items)
+    importlib.reload(database.source_MSG_Reports)
+    from database.source_contracts import lst_source_contracts
+    from database.source_items import lst_items
+    from database.source_MSG_Reports import lst_source_MSG_reports
     # test
     # lst_source_contracts = ["23S13A0041","23R13A0051"]
     # lst_items = ["02502735","21190613"]
