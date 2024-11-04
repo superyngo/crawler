@@ -203,18 +203,18 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                         self.switch_to.window(str_report_handle)
                         # wait report
                         self._wait_element(By.XPATH, f"//div[contains(text(), {report.name})]")
-                        time.sleep(3)
+                        # time.sleep(3)
                         # download and wait
                         self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_Button', condition=EC.element_to_be_clickable).click()
-                        time.sleep(1)
+                        # time.sleep(1)
                         try:
                             self._wait_element(By.XPATH, '//a[@title="Excel"]', 3, condition=EC.element_to_be_clickable).click()
-                            time.sleep(1)
+                            # time.sleep(1)
                         except TimeoutException:
                             self._wait_element(By.ID, 'ReportViewer1_ctl05_ctl04_ctl00_Button', condition=EC.element_to_be_clickable).click()
-                            time.sleep(1)
+                            # time.sleep(1)
                             self._wait_element(By.XPATH, '//a[@title="Excel"]', condition=EC.element_to_be_clickable).click()
-                            time.sleep(1)
+                            # time.sleep(1)
                     # Wait for download
                     while not os.path.exists(report.old_path):
                         time.sleep(2)
@@ -739,10 +739,9 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             data, postfix, contract = dict_contract_batches['data'], dict_contract_batches['postfix'], dict_contract_batches['contract']
             for key, value in data.items():
                 if value:
-                    [tablename, columns_name] = self._dic_EPIS_contract_batch_db_names[postfix] if key == 'info' else self._dic_EPIS_contract_batch_db_names[key]
+                    [tablename, lst_sql_columns] = self._dic_EPIS_contract_batch_db_names[postfix] if key == 'info' else self._dic_EPIS_contract_batch_db_names[key]
                     with DatabaseManager(DB_PATH) as db:
                         # Prepare the SQL query
-                        lst_sql_columns = columns_name
                         insert_replace_sql = f'''
                         INSERT OR REPLACE INTO {tablename} (
                             {','.join(lst_sql_columns)}

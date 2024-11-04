@@ -238,7 +238,7 @@ class CsMyDriverComponent:
                 self.switch_to.alert.accept()
             except NoAlertPresentException:
                 pass
-            return WebDriverWait(self, time).until(EC.presence_of_element_located((By_locator, locator)))
+            return WebDriverWait(self, time).until(condition((By_locator, locator)))
     def _try_extract_element_value(self, element, error_return = "") -> str:
         try:
             match element.tag_name:
