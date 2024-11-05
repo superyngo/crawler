@@ -145,13 +145,13 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             _BASE_URL = 'https://msgrpt.cht.com.tw/RsView12/RsPortal.aspx'
             self.get(_BASE_URL)
             # Login to sharepoint
-            if handle_check_online:
-                driver_sharepoint = self.__class__('sharepoint')
+            if handle_check_online and self._helper_driver is None:
+                self._helper_driver = self.__class__('sharepoint')
             # main fetch and uploading
             for report in source:
                 report = CsMSGReport(**report)
                 # check if exited online
-                if handle_check_online and driver_sharepoint.sharepoint_check_online(report):
+                if handle_check_online and self._helper_driver.sharepoint_check_online(report):
                     fn_log(f"{self._index}:{report.new_name} already uploaded!")
                     continue
                 # fetch
@@ -168,9 +168,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                 # upload
                 if handle_check_online:
                     fn_log(f"{self._index}: Start uploading {report.new_path}, please wait for uploading.")
-                    fn_log(f"{self._index}: Upload {report.new_path} {driver_sharepoint.sharepoint_upload(report)}!!")
-            if handle_check_online:
-                driver_sharepoint.close()
+                    fn_log(f"{self._index}: Upload {report.new_path} {self._helper_driver.sharepoint_upload(report)}!!")
         def _MSG_query(self, report: CsMSGReport) -> None:
                 try:
                     # choose report
@@ -790,8 +788,10 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
     def _loader_init_remove() -> dict[str, any]:
         def __init__loader(self, task) -> None:
             if task not in ['sharepoint', 'google']: self.login_cht()
+            self._helper_driver = None
         def __remove__loader(self, task) -> None:
-            pass
+            if self._helper_driver:
+                self._helper_driver.close()
         return vars()
     return {key: func() for key, func in vars().items()}
 
