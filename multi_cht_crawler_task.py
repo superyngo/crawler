@@ -52,7 +52,7 @@ def main():
         'EPIS_contract_batch' : {
           'source' : lst_source_contracts,
           'task' : 'EPIS_contract_batch',
-          'threads' : 2
+          'threads' : 3
         },
         'EPIS_contract_info_items':{
           'source' : lst_source_contracts,

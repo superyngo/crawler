@@ -86,14 +86,21 @@ def split_to_queue(source: Any) -> Queue:
 def worker(queue: Queue, call_def: Callable, args: list, kwargs: dict, index: int):
     """Thread worker function to process items in the queue."""
     while not queue.empty():
-        item = queue.get()
-        if isinstance(item, tuple):  # For dictionaries, item will be a (key, value) tuple
-            kwargs.update({'source': {item[0]: item[1]}, 'index': index})
-        else:
-            kwargs.update({'source': [item], 'index': index})
-        fn_log(f"Remaining items: {queue.qsize()}")
-        call_def(*args, **kwargs)
-        queue.task_done()
+        try:
+            fn_log(f"Remaining items: {queue.qsize()}")
+            item = queue.get_nowait()  # Non-blocking get
+            print(f"Thread {index} processing item: {item}")
+            
+            # Set up kwargs for the function call
+            if isinstance(item, tuple):  # For dictionaries, item will be (key, value)
+                kwargs.update({'source': {item[0]: item[1]}, 'index': index})
+            else:
+                kwargs.update({'source': item, 'index': index})
+            
+            # Execute the provided function
+            call_def(*args, **kwargs)
+        finally:
+            queue.task_done()  # Ensure this item is marked as done
 
 def create_lst_of(n:int, element={'index': None, 'driver': None, 'list': []}):
     return [element for _ in range(n)]
@@ -104,9 +111,11 @@ def multithreading(source:any, call_def:Callable, threads:int=1, args:list=[], k
             case None:
                 futures = [
                     executor.submit(call_def, *args, index=index, **kwargs)  
-                    for index in list(range(threads))
+                    for index in range(threads)
                 ]
             case list() | tuple() | dict():
+                # for index in range(threads):
+                #     executor.submit(worker, q, call_def, args, kwargs, index)
                 # futures = [
                 #     executor.submit(call_def, *args, source=splitted_source, index=index, **kwargs)  
                 #     for index, splitted_source in split_to_dict(source, threads).items()
@@ -119,10 +128,10 @@ def multithreading(source:any, call_def:Callable, threads:int=1, args:list=[], k
             case _:
                 futures = [
                     executor.submit(call_def, *args, source=source, index=index, **kwargs) 
-                    for index in list(range(threads))
+                    for index in range(threads)
                 ] 
-        for future in futures:
-            future.result()
+    for future in futures:
+        future.result()
 
 def convert_roc_to_western(roc_date: str = "") -> str:
     if roc_date == "":
