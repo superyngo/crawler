@@ -46,6 +46,9 @@ def sanitize_string(value):
         return re.sub(r'[^\x20-\x7E\u4E00-\u9FFF\u3000-\u303F]', '', value)
     return value
 
+def create_lst_of(n:int, element={'index': None, 'driver': None, 'list': []}):
+    return [element for _ in range(n)]
+
 def split_list(input_list:list, num:int=1):
     # Create a list of empty lists
     result = [[] for _ in range(num)]
@@ -87,25 +90,28 @@ def worker(queue: Queue, call_def: Callable, args: list, kwargs: dict, index: in
     """Thread worker function to process items in the queue."""
     while not queue.empty():
         try:
-            fn_log(f"Remaining items: {queue.qsize()}")
-            item = queue.get_nowait()  # Non-blocking get
-            print(f"Thread {index} processing item: {item}")
-            
+            # item = queue.get_nowait()  # Non-blocking get
+            # fn_log(f"{index}: Remaining items: {queue.qsize()}")
+            # fn_log(f"{index}: Processing item: {item}")
+
+            item = queue.get()  # Blocking get
+            fn_log(f"{index}: Remaining items: {queue.qsize()}")
+            fn_log(f"{index}: Processing item: {item}")
+
             # Set up kwargs for the function call
             if isinstance(item, tuple):  # For dictionaries, item will be (key, value)
                 kwargs.update({'source': {item[0]: item[1]}, 'index': index})
             else:
-                kwargs.update({'source': item, 'index': index})
+                kwargs.update({'source': [item], 'index': index})
             
             # Execute the provided function
             call_def(*args, **kwargs)
-        finally:
             queue.task_done()  # Ensure this item is marked as done
+        except queue.Empty:
+            fn_log("{index}: No remaining items.")
+            break  # Exit if the queue is empty
 
-def create_lst_of(n:int, element={'index': None, 'driver': None, 'list': []}):
-    return [element for _ in range(n)]
-
-def multithreading(source:any, call_def:Callable, threads:int=1, args:list=[], kwargs:dict={}):
+def multithreading(call_def:Callable, source:any=None, threads:int=1, args:list=[], kwargs:dict={}):
     with ThreadPoolExecutor(max_workers=threads) as executor:
         match source:
             case None:
@@ -395,8 +401,8 @@ class CsMultiManager:
             fn_log(f"start initializing {index} instance")
             self._instances.update({index: self._subclass(*args, index=index, **kwargs)})
         multithreading(
-            source = None,
             call_def = _init_instance,
+            source = None,
             threads = self._threads,
             args = self._args,
             kwargs = self._kwargs
@@ -413,14 +419,14 @@ class CsMultiManager:
             if isinstance(source,(list, tuple, dict)):
                 self._sources.clear()
                 multithreading(
-                    source = source,
                     call_def = lambda source, index: self._sources.update({index: source}),
+                    source = source,
                     threads = threads,
                 )
             # execute instances def
             multithreading(
-                source = source,
                 call_def = lambda *args, index, **kwargs: getattr(self._instances[index], handler)(*args, **kwargs),
+                source = source,
                 threads = threads,
                 args = args,
                 kwargs = kwargs

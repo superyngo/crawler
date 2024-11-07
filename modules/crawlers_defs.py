@@ -788,7 +788,6 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
     def _loader_init_remove() -> dict[str, any]:
         def __init__loader(self, task) -> None:
             if task not in ['sharepoint', 'google']: self.login_cht()
-            self._helper_driver = None
         def __remove__loader(self, task) -> None:
             if self._helper_driver:
                 self._helper_driver.close()
@@ -830,6 +829,7 @@ class CsChtCrawlerComponent:
         except NoSuchElementException:
             return error_return
     def __init__(self):
+        self._helper_driver = None
         self._login_cht = False
 # class factory
 
@@ -862,7 +862,4 @@ dic_cs_cht_multi_crawler_config = {
 }
 
 
-# register
-# loginer
-# key installer
-# key remover
+

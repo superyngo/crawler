@@ -1,4 +1,4 @@
-lst_source_contracts = ['DC105A9953', 'MA206A0621' ,'MAC09A4332']
+lst_source_contracts = ['23W13A2181', '23W13A2411']
 
 
 
