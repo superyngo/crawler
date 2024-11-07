@@ -1,7 +1,5 @@
 # 20241014
-from app.utils.timestamp import *
 from app.utils.multithreading import *
-import time, re, ast, os
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -9,14 +7,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.select import Select
 from selenium.common.exceptions import UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, NoAlertPresentException, JavascriptException
-from typing import TypedDict, Any, Callable
-from types import MethodType
-import hashlib
+
 
 os.environ['HTTPS_PROXY'] = ''
 os.environ['HTTP_PROXY'] = ''
 import sqlite3
-LOCK = threading.Lock()
 
 # URL and Path
 STR_DOWNLOADS_FOLDER_PATH = os.path.join(os.path.expanduser('~'), 'Downloads')
@@ -24,141 +19,7 @@ STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH = f"{STR_DOWNLOADS_FOLDER_PATH}\\{STR_DATEST
 os.makedirs(STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH, exist_ok=True)
 DB_PATH = r'D:\Users\user\OneDrive - Chunghwa Telecom Co., Ltd\Work\99_共享檔案\三駐點\存控\存控.db'
 
-def fn_log(str_log:str, str_filename:str = "") -> None:
-    # Get the current date and time
-    current_time = datetime.datetime.now()
-    # Format the timestamp as a readable string
-    timestamp = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    # Define the log message with the timestamp
-    log_message = f"{timestamp} - {str_log}\n"
-    # Open the log file in append mode ('a')
-    if str_filename == "":
-        str_filename = f"{STR_DATESTAMP}_log.txt"
-    with open(f"{STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH}\\{str_filename}", 'a') as log_file:
-        # Write the log message to the file
-        log_file.write(log_message)
-    print(log_message)
 
-def sanitize_string(value):
-    # Remove non-printable and non-ASCII characters, except for common Chinese characters and punctuation
-    if isinstance(value, str):
-        return re.sub(r'[^\x20-\x7E\u4E00-\u9FFF\u3000-\u303F]', '', value)
-    return value
-
-def create_lst_of(n:int, element={'index': None, 'driver': None, 'list': []}):
-    return [element for _ in range(n)]
-
-def split_list(input_list:list, num:int=1):
-    # Create a list of empty lists
-    result = [[] for _ in range(num)]
-    # Iterate through the input list and distribute elements into sublists
-    for i, val in enumerate(input_list):
-        result[i % num].append(val)
-    return result
-
-def split_to_dict(source:any, num:int=1) -> dict[int, any]:
-    def _list(_list, num:int=1)->dict[int, any]:
-        if len(_list) < num:
-            num=len(_list)
-        # Create a dictionary with empty lists for each key
-        result = {i: [] for i in range(num)}
-        # Iterate through the input list and distribute elements into the sublists
-        for i, val in enumerate(_list):
-            result[i % num].append(val)
-        return result
-    if isinstance(source, (list,tuple)):
-        return _list(source, num)
-    if isinstance(source, dict):
-        return {k: dict(v) for k, v in _list(source.items(), num).items()}
-    raise TypeError("source must be type list, tuple or dictionary")
-
-def split_to_queue(source: Any) -> Queue:
-    """Populate a Queue with items from source."""
-    q = Queue()
-    if isinstance(source, (list, tuple)):
-        for item in source:
-            q.put(item)
-    elif isinstance(source, dict):
-        for item in source.items():
-            q.put(item)
-    else:
-        raise TypeError("source must be type list, tuple, or dictionary")
-    return q
-
-def worker(queue: Queue, call_def: Callable, args: list, kwargs: dict, index: int):
-    """Thread worker function to process items in the queue."""
-    while not queue.empty():
-        try:
-            # item = queue.get_nowait()  # Non-blocking get
-            # fn_log(f"{index}: Remaining items: {queue.qsize()}")
-            # fn_log(f"{index}: Processing item: {item}")
-
-            item = queue.get()  # Blocking get
-            fn_log(f"{index}: Remaining items: {queue.qsize()}")
-            fn_log(f"{index}: Processing item: {item}")
-
-            # Set up kwargs for the function call
-            if isinstance(item, tuple):  # For dictionaries, item will be (key, value)
-                kwargs.update({'source': {item[0]: item[1]}, 'index': index})
-            else:
-                kwargs.update({'source': [item], 'index': index})
-            
-            # Execute the provided function
-            call_def(*args, **kwargs)
-            queue.task_done()  # Ensure this item is marked as done
-        except queue.Empty:
-            fn_log("{index}: No remaining items.")
-            break  # Exit if the queue is empty
-
-def multithreading(call_def:Callable, source:any=None, threads:int=1, args:list=[], kwargs:dict={}):
-    with ThreadPoolExecutor(max_workers=threads) as executor:
-        match source:
-            case None:
-                futures = [
-                    executor.submit(call_def, *args, index=index, **kwargs)  
-                    for index in range(threads)
-                ]
-            case list() | tuple() | dict():
-                # for index in range(threads):
-                #     executor.submit(worker, q, call_def, args, kwargs, index)
-                # futures = [
-                #     executor.submit(call_def, *args, source=splitted_source, index=index, **kwargs)  
-                #     for index, splitted_source in split_to_dict(source, threads).items()
-                # ]
-                q = split_to_queue(source)
-                futures = [
-                    executor.submit(worker, q, call_def, args, kwargs, index)
-                    for index in range(threads)
-                ]
-            case _:
-                futures = [
-                    executor.submit(call_def, *args, source=source, index=index, **kwargs) 
-                    for index in range(threads)
-                ] 
-    for future in futures:
-        future.result()
-
-def convert_roc_to_western(roc_date: str = "") -> str:
-    if roc_date == "":
-        return ""
-    # Step 1: Eliminate all non-numeric characters except "/" and "-"
-    cleaned_date = re.sub(r'[^\d/-]', '', roc_date)
-    # Step 2: Extract the first 3 characters (ROC year) and convert to Western year
-    roc_year = int(cleaned_date[:3])
-    western_year = str(roc_year + 1911)
-    # Step 3: Combine Western year with the remaining part of the ROC date string
-    western_date = western_year + cleaned_date[3:]
-    return western_date
-
-def create_sha256_hash(data):
-    # Create a SHA-256 hash object
-    sha256_hash = hashlib.sha256()
-    
-    # Encode the input data to bytes (if it's a string) and update the hash object
-    sha256_hash.update(data.encode('utf-8'))
-    
-    # Get the hexadecimal representation of the hash
-    return sha256_hash.hexdigest()
 
 class DatabaseManager:
     def __init__(self, db_name):
