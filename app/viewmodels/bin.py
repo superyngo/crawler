@@ -1,25 +1,14 @@
 # 20241014
 from app.utils.multithreading import *
-
+from app.utils.common import *
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.select import Select
 from selenium.common.exceptions import UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, NoAlertPresentException, JavascriptException
 
 
-os.environ['HTTPS_PROXY'] = ''
-os.environ['HTTP_PROXY'] = ''
 import sqlite3
-
-# URL and Path
-STR_DOWNLOADS_FOLDER_PATH = os.path.join(os.path.expanduser('~'), 'Downloads')
-STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH = f"{STR_DOWNLOADS_FOLDER_PATH}\\{STR_DATESTAMP}"
-os.makedirs(STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH, exist_ok=True)
-DB_PATH = r'D:\Users\user\OneDrive - Chunghwa Telecom Co., Ltd\Work\99_共享檔案\三駐點\存控\存控.db'
-
-
 
 class DatabaseManager:
     def __init__(self, db_name):
@@ -175,7 +164,7 @@ class CsMyEdgeDriverInit:
         # Create directories if they don't exist
         os.makedirs(user_data_dir, exist_ok=True)
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        edge_bin = './bin/msedgedriver.exe'
+        edge_bin = './app/bin/msedgedriver.exe'
         service_args=[
                     #   '--log-level=ALL',
                     #   '--append-log',

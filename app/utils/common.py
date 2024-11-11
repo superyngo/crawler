@@ -1,6 +1,12 @@
-from app.utils.timestamp import *
 import hashlib
-import time, re, ast, os
+import re, os
+from app.utils.timestamp import *
+import datetime
+
+# URL and Path
+STR_DOWNLOADS_FOLDER_PATH = os.path.join(os.path.expanduser('~'), 'Downloads')
+STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH = f"{STR_DOWNLOADS_FOLDER_PATH}\\{STR_DATESTAMP}"
+DB_PATH = r'D:\Users\user\OneDrive - Chunghwa Telecom Co., Ltd\Work\99_共享檔案\三駐點\存控\存控.db'
 
 def fn_log(str_log:str, str_filename:str = "") -> None:
     # Get the current date and time

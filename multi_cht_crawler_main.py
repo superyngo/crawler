@@ -2,7 +2,9 @@ import importlib
 import app.resources.source_contracts
 import app.resources.source_items
 import app.resources.source_MSG_Reports
-from modules.crawlers_defs import * 
+from app.viewmodels.crawlers_defs import * 
+from app.config import *
+
 def convert_string_to_dict(input_string):
   result = {}
   current_key = ''

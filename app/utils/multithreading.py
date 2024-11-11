@@ -1,9 +1,9 @@
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from typing import TypedDict, Any, Callable
-from types import MethodType
-from app.utils.common import *
+from queue import Empty as QueueEmpty
+from typing import Any, Callable
+from app.utils.common import fn_log 
 
 
 LOCK = threading.Lock()
@@ -69,7 +69,7 @@ def worker(queue: Queue, call_def: Callable, args: list, kwargs: dict, index: in
             # Execute the provided function
             call_def(*args, **kwargs)
             queue.task_done()  # Ensure this item is marked as done
-        except queue.Empty:
+        except QueueEmpty:
             fn_log("{index}: No remaining items.")
             break  # Exit if the queue is empty
 

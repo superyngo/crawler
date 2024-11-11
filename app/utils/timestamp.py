@@ -28,6 +28,7 @@ def _fn_calculate_start_date(date:datetime.date) -> str:
     # 格式化日期為 "YYYY/MM/DD" 格式
     return result_date.strftime("%Y/%m/%d")
 
+
 # Timestamp and needed date
 DAT_TODAY:datetime = datetime.date.today()
 STR_DATESTAMP:str = DAT_TODAY.strftime("%Y%m%d")
@@ -35,3 +36,4 @@ STR_FIRST_DAY_OF_THIS_YEAR:str = datetime.date(DAT_TODAY.year, 1, 1).strftime("%
 DAT_CLOSING_DATE:datetime = _fn_calculate_closing_date(DAT_TODAY)
 STR_START_DATE:datetime = _fn_calculate_start_date(DAT_TODAY)
 STR_THIS_MONTH_PREFIX:str = f"{DAT_CLOSING_DATE.year - 1911}{str(DAT_CLOSING_DATE.month).zfill(2)}"
+

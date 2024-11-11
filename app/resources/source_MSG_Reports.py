@@ -1,4 +1,4 @@
-from modules.crawlers_defs import *
+from selenium.webdriver.common.by import By
 
 
 lst_source_MSG_reports:list = [

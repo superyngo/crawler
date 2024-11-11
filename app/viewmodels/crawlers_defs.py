@@ -1,4 +1,7 @@
-from modules.bin import *
+
+from app.viewmodels.bin import *
+from selenium.webdriver.common.by import By
+from typing import TypedDict
 
 class CsMSGReport(CsMyClass):
     class CsSlotTypes(TypedDict):
