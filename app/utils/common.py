@@ -49,3 +49,33 @@ def create_sha256_hash(data):
     
     # Get the hexadecimal representation of the hash
     return sha256_hash.hexdigest()
+
+
+from typing import Dict, List, Optional, Any, Type, TypedDict, NotRequired
+
+class config_dict_type(TypedDict):
+    default_args: NotRequired[List[Any]]
+    all_args: NotRequired[bool]
+    default_kwargs: NotRequired[Dict[str, Any]]
+    all_kwargs: NotRequired[bool]
+
+
+def cs_factory(dic_cs: Dict[Type, Optional[config_dict_type]]):
+    bases = tuple(dic_cs.keys())
+    slots = {slot for base in bases if hasattr(base, '__slots__') for slot in getattr(base, '__slots__')}
+
+    # Define the dynamic class with type
+    def init(self, *args, **kwargs):
+        # config = {default_args': [],'all_args': bool,'default_kwargs': {},'all'd_kwargs': bool}
+        for Cs, config in dic_cs.items():
+            if config is None:
+                continue
+            _args = config.get('default_args', []) + ([*args] if config.get('all_args', False) else [])
+            _kwargs = config.get('default_kwargs', {}) | (kwargs if config.get('all_kwargs', False) else {key: kwargs.get(key, value) for key, value in config.get('default_kwargs', {}).items()})
+            # print(f"{Cs.__name__} : {config = }")
+            # print(f"{Cs.__name__} : {_args = }")
+            # print(f"{Cs.__name__} : {_kwargs = }")
+            Cs.__init__(self, *_args, **_kwargs)
+
+    # Create the class with type
+    return type('_Cs', bases, {'__slots__': slots, '__init__': init})

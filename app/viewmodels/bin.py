@@ -9,11 +9,6 @@ from selenium.common.exceptions import UnexpectedAlertPresentException, NoSuchEl
 from types import MethodType
 
 
-
-class CsBasicComponent:
-    def __getattr__(self, name):
-        raise AttributeError(f"'{self.__class__.__name__}' '{name}' was not set")
-
 class CsMyDriverComponent:
     def _select_change_value(self, By_locator: str, locator: str, new_value: str) -> None:
         _select_element = WebDriverWait(self, 20).until(EC.element_to_be_clickable((By_locator, locator)))
@@ -246,36 +241,3 @@ class CsMultiLoaderEntry:
         # execute
         getattr(self, task + '_handler')(source = source, **kwargs)
 
-# def cs_factory(dic_cs: dict):
-#     # create class skelton
-#     class _Cs(*dic_cs):
-#         __slots__ = {slot for base in dic_cs if hasattr(base, '__slots__') for slot in getattr(base, '__slots__')}
-#         def __init__(self, *args, **kwargs):
-#         # set attributes
-#             for Cs, config in dic_cs.items():
-#                 if config is None: continue
-#                 default_args, default_kwargs = config.get('default_args', set()), config.get('default_kwargs', {})
-#                 _args = default_args - {'args', 'kwargs'} | set(args) if 'args' in default_args else default_args - {'kwargs'}
-#                 _kwargs = default_kwargs | kwargs if 'kwargs' in default_args else {key: kwargs.get(key, value) for key, value in default_kwargs.items()}
-#                 Cs.__init__(self, *_args, **_kwargs)
-#     return _Cs
-
-def cs_factory(dic_cs):
-    bases = tuple(dic_cs.keys())
-    slots = {slot for base in bases if hasattr(base, '__slots__') for slot in getattr(base, '__slots__')}
-
-    # Define the dynamic class with type
-    def init(self, *args, **kwargs):
-        # config = {'default_args': [],'all_args': bool,'default_kwargs': {},'all_kwargs': bool}
-        for Cs, config in dic_cs.items():
-            if config is None:
-                continue
-            _args = config.get('default_args', []) + ([*args] if config.get('all_args', False) else [])
-            _kwargs = config.get('default_kwargs', {}) | (kwargs if config.get('all_kwargs', False) else {key: kwargs.get(key, value) for key, value in config.get('default_kwargs', {}).items()})
-            # print(f"{Cs.__name__} : {config = }")
-            # print(f"{Cs.__name__} : {_args = }")
-            # print(f"{Cs.__name__} : {_kwargs = }")
-            Cs.__init__(self, *_args, **_kwargs)
-
-    # Create the class with type
-    return type('_Cs', bases, {'__slots__': slots, '__init__': init})
