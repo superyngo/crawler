@@ -1,150 +1,14 @@
 
 from app.viewmodels.bin import *
 from selenium.webdriver.common.by import By
-from typing import TypedDict
-
-class CsMSGReport(CsMyClass):
-    class CsSlotTypes(TypedDict):
-        name: str
-        prefix: str
-        postfix: str
-        set_report: dict[str, str]
-        set_report_attribute: dict[str, str]
-        handle_check_online: bool
-        filename: str
-        filename_extension: str
-        show_report: bool
-        old_path: str
-        new_name: str
-        new_path: str
-    __slots__ = list(CsSlotTypes.__annotations__.keys())
-    def __init__(self, name: str, prefix: str = None, postfix: str = None, set_report: dict = {}, set_report_attribute: dict = {}, handle_check_online: bool = True, show_report: bool = True) -> None:
-        self.filename = self.name = name
-        self.filename_extension = 'xlsx'
-        self.postfix = postfix
-        self.handle_check_online = handle_check_online
-        self.show_report = show_report
-        match name:
-            case 'RS4183MA4L':
-                self.prefix = prefix if prefix else STR_THIS_MONTH_PREFIX
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISIV',
-                        }
-                self.set_report_attribute = set_report_attribute if set_report_attribute else {
-                        'ddlOrg':['fn_driver_select_change_value', By.ID, '5']
-                    }
-            # RS0101RA4L_NE 累積收料
-            case "RS0101RA4L_NE":
-                self.prefix = prefix if prefix else STR_DATESTAMP
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISMSH',
-                        }
-                self.set_report_attribute = set_report_attribute if set_report_attribute else {
-                        "ddlOrg":['fn_driver_select_change_value', By.ID, 'M33'],
-                        "txtSDate":['fn_driver_input_send_keys', By.ID, STR_START_DATE]
-                    }
-            # RS4212RA4L by 庫 累積領退
-            case 'RS4212RA4L':
-                self.prefix = prefix if prefix else STR_DATESTAMP
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISIV',
-                        }
-                self.set_report_attribute = set_report_attribute if set_report_attribute else {
-                        # 'ddlRpt':['fn_driver_select_change_value', By.ID, '0'],
-                        'txtWhNo':['fn_driver_input_send_keys', By.ID, postfix]
-                    }
-            # RS4153RA4L 即時庫存
-            case 'RS4153RA4L':
-                self.prefix = prefix if prefix else STR_DATESTAMP
-                self.postfix = postfix if postfix else "all"
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISIV',
-                        }
-                self.set_report_attribute = set_report_attribute if set_report_attribute else {
-                        'ddlWhNo1':['fn_driver_select_change_value', By.ID, '50502'],
-                        'ddlWhNo2':['fn_driver_select_change_value', By.ID, '50503'],
-                        'ddlWhNo3':['fn_driver_select_change_value', By.ID, '59521'],
-                        'ddlWhNo4':['fn_driver_select_change_value', By.ID, '59531'],
-                    }
-            # RS4182M 當月庫存料月數
-            case 'RS4182M':
-                self.prefix = prefix if prefix else STR_THIS_MONTH_PREFIX
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISIV',
-                        }
-                self.set_report_attribute = set_report_attribute 
-            # RS0472MA4L 當月料庫作業量
-            case 'RS0472MA4L':
-                self.prefix = prefix if prefix else STR_THIS_MONTH_PREFIX
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISMSH',
-                        }
-                self.set_report_attribute = set_report_attribute if set_report_attribute else {
-                        "ddlSOrg":['fn_driver_select_change_value', By.ID, '5']
-                    }
-            # RS1563MA4L 當月久未領用
-            case 'RS1563MA4L':
-                self.prefix = prefix if prefix else STR_THIS_MONTH_PREFIX
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISIC',
-                        }
-                self.set_report_attribute = set_report_attribute if set_report_attribute else {
-                        'ddlShowDetail':['fn_driver_select_change_value', By.ID, '']
-                    }
-            case 'RSahdinqRA4L':
-                self.prefix = prefix if prefix else STR_THIS_MONTH_PREFIX
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISLP',
-                        }
-                self.set_report_attribute = set_report_attribute if set_report_attribute else {
-                        'txtCtId':['fn_driver_input_send_keys', By.ID, prefix]
-                    }
-            case 'RS5203A':
-                self.prefix = prefix if prefix else STR_DATESTAMP
-                self.postfix = postfix if postfix else "all"
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISASIS',
-                        }
-                self.set_report_attribute = set_report_attribute if set_report_attribute else {
-                        'txtMaxPrice':['fn_driver_input_send_keys', By.ID, '9999999'],
-                        'txtEDate':['fn_driver_input_send_keys', By.ID, datetime.datetime.strptime(self.prefix, '%Y%m%d').strftime('%Y/%m/%d')],
-                        'ddlSOrg':['fn_driver_select_change_value', By.ID, ''],
-                        'chkSelect':['fn_driver_click', By.ID],
-                    }
-                self.filename += STR_DATESTAMP
-                self.filename_extension = 'xls'
-                self.show_report = False
-            case 'RS4107RA4L':
-                self.prefix = prefix if prefix else STR_FIRST_DAY_OF_THIS_YEAR + "_" + STR_DATESTAMP
-                self.postfix = postfix if postfix else "行通"
-                self.set_report = set_report if set_report else {
-                            'ddlSys':'MASIS',
-                            'ddlCSys':'MASISIV',
-                        }
-                self.set_report_attribute = set_report_attribute if set_report_attribute else {
-                        'ddlOrg':['fn_driver_select_change_value', By.ID, 'M33'],
-                        'txtSDate':['fn_driver_input_send_keys', By.ID, datetime.date(DAT_TODAY.year, 1, 1).strftime("%Y/%m/%d")],
-                    }
-            case "_":
-                self.prefix = prefix if prefix else STR_DATESTAMP
-                self.set_report = set_report
-                self.set_report_attribute = set_report_attribute
-        self.old_path = f"{STR_DOWNLOADS_FOLDER_PATH}\\{self.filename}.{self.filename_extension}"
-        self.new_name = f"{self.prefix}_{self.filename}_{self.postfix}.{self.filename_extension}" if bool(self.postfix) else f"{self.prefix}_{self.filename}.{self.filename_extension}"
-        self.new_path = f"{STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH}\\{self.new_name}" 
+import time, ast
+from app.services.db_manager import DatabaseManager
+from app.config import DB_PATH
+from app.models.models import CsMSGReport
 
 def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
-    def MSG() -> dict[str, any]:
-        def MSG_handler(self, source: list[str], handle_check_online: bool=True, **kwargs) -> None:
+    def MSG() -> dict[str, Any]:
+        def MSG_handler(self, source:list[dict], handle_check_online: bool=True, **kwargs) -> None:
             _BASE_URL = 'https://msgrpt.cht.com.tw/RsView12/RsPortal.aspx'
             self.get(_BASE_URL)
             # Login to sharepoint
@@ -172,7 +36,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                 if handle_check_online:
                     fn_log(f"{self._index}: Start uploading {report.new_path}, please wait for uploading.")
                     fn_log(f"{self._index}: Upload {report.new_path} {self._helper_driver.sharepoint_upload(report)}!!")
-        def _MSG_query(self, report: CsMSGReport) -> None:
+        def _MSG_query(self, report: CsMSGReport) -> str:
                 try:
                     # choose report
                     for id, value in report.set_report.items():
@@ -196,6 +60,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                     # fetch report
                     _int_current_windows_handles = len(self.window_handles)
                     self._wait_element(By.ID, "btnQuery").click()
+                    str_report_handle:str|None = None
                     # check if direct download
                     if report.show_report:
                         while len(self.window_handles) == _int_current_windows_handles:
@@ -234,7 +99,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
         return vars()
         def __init__component(self) -> None:
             print('MSG component equipped!!')
-    def MASIS_InvQry() -> dict[str, any]:
+    def MASIS_InvQry() -> dict[str, Any]:
         def MASIS_InvQry_handler(self, source: list[str], **kwargs) -> None:
             _BASE_URL = 'https://masis.cht.com.tw/IV_Net/IvQry/Inv/InvQry.aspx'
             _task_name = 'MASIS_InvQry'
@@ -314,7 +179,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                     item[3] = item[3][1:-1]
             return data
         return vars()
-    def EPIS_contract_info_items() -> dict[str, any]:
+    def EPIS_contract_info_items() -> dict[str, Any]:
         def EPIS_contract_info_items_handler(self, source: list[str], **kwargs):
             EPIS_contract_info_task_name, EPIS_contract_items_task_name = 'EPIS_contract_info', 'EPIS_contract_items'
             int_total = len(source)
@@ -338,6 +203,8 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                     continue
                 # fetch items
                 lst_items_data = []
+                lst_items_sql_columns = []
+                str_type = ''
                 try:
                     fn_log(f"{self._index}: Start fetching {contract} items.")
                     lst_items_data = self._EPIS_contract_items_query(contract = contract)
@@ -461,18 +328,18 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             except TimeoutException:
                 raise TimeoutException
         return vars()
-    def MASIS_barcode() -> dict[str, any]:
-        def MASIS_barcode_handler(self, source: dict[str,list[any]], **kwargs) -> None:
+    def MASIS_barcode() -> dict[str, Any]:
+        def MASIS_barcode_handler(self, source: dict[str, list[Any]], **kwargs) -> None:
             _task_name = 'MASIS_barcode'
             STR_MASIS_BARCODE_URL = 'https://masis.cht.com.tw/IV_Net/IvQry/Inv/BarcodeQry.aspx'
             self.get(STR_MASIS_BARCODE_URL)
             int_total_lots = sum(len(value) for value in source.values())
             int_finished_count = 0
             # main
-            for key in source:        
+            for key in source.keys():        
                 # Input contract ID
                 self._input_send_keys(By.ID, 'ContentPlaceHolder1_txtCtId', key)
-                for Lot in source.get(key):
+                for Lot in source.get(key, []):
                     lst_data = []
                     # zfill every lot
                     zfill_lot = Lot.zfill(3) if type(Lot) == str else str(Lot).zfill(3)
@@ -548,7 +415,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             # df.to_excel(f'{STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH}\\{key}_{zfill_lot}.xlsx', index=False)
             # fn_log(f"{key}_{zfill_lot}.xlsx saved!! {int_finished_count} of {int_total_lots} finished")
             pass
-    def MASIS_item_detail() -> dict[str, any]:
+    def MASIS_item_detail() -> dict[str, Any]:
         def MASIS_item_detail_handler(self, source: list[str], **kwargs):
             _task_name = 'MASIS_item_detail'
             _BASE_URL = 'https://masis.cht.com.tw/masis/NM/Mano/ManoMtn.aspx?t=m'
@@ -602,7 +469,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             # df.columns = ['材料編號', '材料名稱', '材料分類1', '材料分類2', '材料分類3','計量單位', '追蹤週期', '導入條碼', 'EAN', '管理人員', '建檔日期', '異動日期']
             # df.to_excel(f'{STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH}\\item_detail/{STR_DATESTAMP}_items.xlsx', index=False)
             pass
-    def EPIS_contract_batch() -> dict[str, any]:
+    def EPIS_contract_batch() -> dict[str, Any]:
         def EPIS_contract_batch_handler(self, source: list[str], **kwargs) -> None:
             int_total = len(source)
             int_finished_count = 0
@@ -754,7 +621,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                         db.execute_many(insert_replace_sql , value)
                         fn_log(f"{self._index}: {contract} {key} saved to db {tablename}")
         return vars()
-    def sharepoint() -> dict[str, any]:
+    def sharepoint() -> dict[str, Any]:
         _sharepoint_base_url = 'https://cht365.sharepoint.com/sites/msteams_e919c5/Shared Documents/General/存控/0_DB/'
         def sharepoint_check_online(self, source: CsMSGReport, **kwargs) ->bool:
             self.get(f"{self._sharepoint_base_url}{source.name}/")
@@ -782,13 +649,13 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             self.get(self._sharepoint_base_url)
             self._wait_element(By.XPATH, '//span[text()="供三採購駐點"]')
         return vars()
-    def google() -> dict[str, any]:
+    def google() -> dict[str, Any]:
         def google_handler(self):
             self.get('https://google.com')
         def __init__component(self, *args, **kwargs):
             self.get('https://google.com')
         return vars()
-    def _loader_init_remove() -> dict[str, any]:
+    def _loader_init_remove() -> dict[str, Any]:
         def __init__loader(self, task) -> None:
             if task not in ['sharepoint', 'google']: self.login_cht()
         def __remove__loader(self, task) -> None:
@@ -841,11 +708,11 @@ dic_cs_cht_crawler_config = {
     CsBasicComponent: None,
     CsMyDriverComponent: None,
     CsMyEdgeDriverInit: {
-        'default_args': {"./profiles/userA"}
+        'default_args': ["./profiles/userA"]
     },
     CsChtCrawlerComponent: {},
     CsLoaderComponent: {
-        'default_args': {'args'},
+        'all_args': True,
         'default_kwargs': {'loadable_components': _spit_cht_crawlers_loadable_components()}
     },
     CsMultiSeed: {
@@ -855,7 +722,8 @@ dic_cs_cht_crawler_config = {
 
 dic_cs_cht_multi_crawler_config = {
     CsMultiManager: {
-        'default_args': {'args', 'kwargs'},
+        'all_args': True,
+        'all_kwargs': True,
         'default_kwargs': {
             'threads': 1,
             'subclass': cs_factory(dic_cs_cht_crawler_config),

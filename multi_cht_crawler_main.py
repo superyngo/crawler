@@ -1,7 +1,7 @@
 import importlib
-import app.resources.source_contracts
-import app.resources.source_items
-import app.resources.source_MSG_Reports
+import app.data.source_contracts
+import app.data.source_items
+import app.data.source_MSG_Reports
 from app.viewmodels.crawlers_defs import * 
 from app.config import *
 
@@ -40,12 +40,12 @@ def main():
 
   handle_stop = False
   while not handle_stop:
-    importlib.reload(app.resources.source_contracts)
-    importlib.reload(app.resources.source_items)
-    importlib.reload(app.resources.source_MSG_Reports)
-    from app.resources.source_contracts import lst_source_contracts
-    from app.resources.source_items import lst_items
-    from app.resources.source_MSG_Reports import lst_source_MSG_reports
+    importlib.reload(app.data.source_contracts)
+    importlib.reload(app.data.source_items)
+    importlib.reload(app.data.source_MSG_Reports)
+    from app.data.source_contracts import lst_source_contracts
+    from app.data.source_items import lst_items
+    from app.data.source_MSG_Reports import lst_source_MSG_reports
     # test
     # lst_source_contracts = ["23S13A0041","23R13A0051"]
     # lst_items = ["02502735","21190613"]

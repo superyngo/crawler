@@ -1,15 +1,23 @@
-from modules.bin import *
+from dataclasses import dataclass, asdict
+from typing import TypedDict
 
-source = [10,20]
-def def1(index, source = None):
-  if source is None:
-    result = index * 2
-  else:
-    result = source[0] * 2
-  fn_log(f"{index}: {result = }")
+# Define the TypedDict for type hints
+class PersonDict(TypedDict):
+    name: str
+    age: int
 
-multithreading(
-    call_def = def1,
-    source = source,
-    threads = 2,
-)
+# Define the dataclass
+@dataclass
+class Person:
+    name: str
+    age: int
+
+    # Method to convert dataclass to dictionary
+    def to_dict(self) -> PersonDict:
+        return asdict(self)  # Returns a dictionary representation
+
+# Example usage
+person_instance = Person(name="Alice", age=30)
+person_dict: PersonDict = person_instance.to_dict()
+
+print(person_dict)  # Output: {'name': 'Alice', 'age': 30}

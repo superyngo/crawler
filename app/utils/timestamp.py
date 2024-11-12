@@ -1,5 +1,4 @@
 import datetime
-
 # Calculate needed dates as string or date
 def _fn_calculate_closing_date(date:datetime.date) -> datetime.date:
     if 1 <= date.day <= 20:
@@ -30,10 +29,10 @@ def _fn_calculate_start_date(date:datetime.date) -> str:
 
 
 # Timestamp and needed date
-DAT_TODAY:datetime = datetime.date.today()
+DAT_TODAY:datetime.date = datetime.date.today()
 STR_DATESTAMP:str = DAT_TODAY.strftime("%Y%m%d")
 STR_FIRST_DAY_OF_THIS_YEAR:str = datetime.date(DAT_TODAY.year, 1, 1).strftime("%Y%m%d")
-DAT_CLOSING_DATE:datetime = _fn_calculate_closing_date(DAT_TODAY)
-STR_START_DATE:datetime = _fn_calculate_start_date(DAT_TODAY)
+DAT_CLOSING_DATE:datetime.date = _fn_calculate_closing_date(DAT_TODAY)
+STR_START_DATE:str = _fn_calculate_start_date(DAT_TODAY)
 STR_THIS_MONTH_PREFIX:str = f"{DAT_CLOSING_DATE.year - 1911}{str(DAT_CLOSING_DATE.month).zfill(2)}"
 

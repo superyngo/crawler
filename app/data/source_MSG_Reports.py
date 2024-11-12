@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 
 
-lst_source_MSG_reports:list = [
+lst_source_MSG_reports:list[dict] = [
     # RS4183MA4L 當月收領料、庫存
     {'name' : 'RS4183MA4L'},
     # RS0101RA4L_NE 累積收料

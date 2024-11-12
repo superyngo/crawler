@@ -6,111 +6,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.select import Select
 from selenium.common.exceptions import UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, NoAlertPresentException, JavascriptException
+from types import MethodType
 
 
-import sqlite3
-
-class DatabaseManager:
-    def __init__(self, db_name):
-        self._db_name = db_name
-        self._conn = None
-        self._cursor = None
-
-    @property
-    def sqlite(self):
-        if self._cursor is None:
-            raise ConnectionError("Database is not connected. Call sqlite.setter with 'connect' first.")
-        return self._cursor
-
-    @sqlite.setter
-    def sqlite(self, action="connect"):
-        try:
-            if action == "connect":
-                if self._conn is None:
-                    self._conn = sqlite3.connect(self._db_name)
-                    self._cursor = self._conn.cursor()
-                else:
-                    print("Database is already connected.")
-            elif action == "close":
-                if self._conn is not None:
-                    self._conn.close()
-                    self._conn = None
-                    self._cursor = None
-                else:
-                    print("Database is already closed.")
-            else:
-                raise ValueError("Invalid action. Use 'connect' or 'close'.")
-        except sqlite3.Error as e:
-            print(f"An error occurred: {e}")
-            self._conn = None
-            self._cursor = None
-            raise
-
-    def execute_query(self, query, parameters=None):
-        try:
-            if self._cursor is None:
-                raise ConnectionError("Database is not connected. Call sqlite.setter with 'connect' first.")
-            
-            if parameters:
-                self._cursor.execute(query, parameters)
-            else:
-                self._cursor.execute(query)
-            
-            self._conn.commit()
-            return self._cursor.fetchall()
-        except sqlite3.Error as e:
-            print(f"An error occurred while executing the query: {e}")
-            self._conn.rollback()
-            raise
-
-    def execute_many(self, query, parameters):
-        try:
-            if self._cursor is None:
-                raise ConnectionError("Database is not connected. Call sqlite.setter with 'connect' first.")
-            
-            self._cursor.executemany(query, parameters)
-            self._conn.commit()
-            return self._cursor.rowcount
-        except sqlite3.Error as e:
-            print(f"An error occurred while executing the batch query: {e}")
-            self._conn.rollback()
-            raise
-    def write_db(self, dbname:str, columns:list[str], records:list[list]):
-        insert_replace_sql = f'''
-        INSERT OR REPLACE INTO {dbname} (
-            {','.join(columns)}
-        ) VALUES ({",".join(["?"] * len(columns))})
-        '''
-        try:
-            if self._cursor is None:
-                raise ConnectionError("Database is not connected. Call sqlite.setter with 'connect' first.")
-            
-            self._cursor.executemany(insert_replace_sql, records)
-            self._conn.commit()
-            return self._cursor.rowcount
-        except sqlite3.Error as e:
-            print(f"An error occurred while executing the batch query: {e}")
-            self._conn.rollback()
-            raise
-    def __enter__(self):
-        self.sqlite = "connect"
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.sqlite = "close"
-
-class CsMyClass:
-    def __init__(self, **kwargs) -> None:
-        dic_default_values = {} # if default needed
-        for key, value in kwargs.items():
-            if key in self.__slots__:
-                setattr(self, key, dic_default_values.get(key, value))
-            else:
-                raise AttributeError(f"'{key}' is not a valid attribute for {self.__class__.__name__}")
-    def __getattr__(self, name):
-        if name in self.__slots__:
-            raise AttributeError(f"'{name}' was not set during initialization")
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
 class CsBasicComponent:
     def __getattr__(self, name):
@@ -236,6 +134,7 @@ class CsMultiSeed:
             self._helper_driver.close()
         self.close() # depends on the instance
         self.quit()
+
 class CsMultiManager:
     def __init__(self, *args, threads, subclass, **kwargs) -> None: 
         for key, value in {'instances':{}, 'sources':{}, 'threads': 0, 'subclass': subclass, 'args': set(args), 'kwargs': kwargs}.items():
@@ -298,6 +197,7 @@ class CsMultiManager:
                     self._instances[i]._close_instance() 
                     self._instances.pop(i)
                 self._threads = threads
+
 class CsMultiLoaderEntry:
     def __init__(self):
         if self.threads == 0: self.threads = 1
@@ -346,18 +246,36 @@ class CsMultiLoaderEntry:
         # execute
         getattr(self, task + '_handler')(source = source, **kwargs)
 
-def cs_factory(dic_cs: dict):
-    # create class skelton
-    class _Cs(*dic_cs):
-        __slots__ = {slot for base in dic_cs if hasattr(base, '__slots__') for slot in getattr(base, '__slots__')}
-        def __init__(self, *args, **kwargs):
-        # set attributes
-            for Cs, config in dic_cs.items():
-                if config is None: continue
-                default_args, default_kwargs = config.get('default_args', set()), config.get('default_kwargs', {})
-                _args = default_args - {'args', 'kwargs'} | set(args) if 'args' in default_args else default_args - {'kwargs'}
-                _kwargs = default_kwargs | kwargs if 'kwargs' in default_args else {key: kwargs.get(key, value) for key, value in default_kwargs.items()}
-                Cs.__init__(self, *_args, **_kwargs)
-    return _Cs
+# def cs_factory(dic_cs: dict):
+#     # create class skelton
+#     class _Cs(*dic_cs):
+#         __slots__ = {slot for base in dic_cs if hasattr(base, '__slots__') for slot in getattr(base, '__slots__')}
+#         def __init__(self, *args, **kwargs):
+#         # set attributes
+#             for Cs, config in dic_cs.items():
+#                 if config is None: continue
+#                 default_args, default_kwargs = config.get('default_args', set()), config.get('default_kwargs', {})
+#                 _args = default_args - {'args', 'kwargs'} | set(args) if 'args' in default_args else default_args - {'kwargs'}
+#                 _kwargs = default_kwargs | kwargs if 'kwargs' in default_args else {key: kwargs.get(key, value) for key, value in default_kwargs.items()}
+#                 Cs.__init__(self, *_args, **_kwargs)
+#     return _Cs
 
+def cs_factory(dic_cs):
+    bases = tuple(dic_cs.keys())
+    slots = {slot for base in bases if hasattr(base, '__slots__') for slot in getattr(base, '__slots__')}
 
+    # Define the dynamic class with type
+    def init(self, *args, **kwargs):
+        # config = {'default_args': [],'all_args': bool,'default_kwargs': {},'all_kwargs': bool}
+        for Cs, config in dic_cs.items():
+            if config is None:
+                continue
+            _args = config.get('default_args', []) + ([*args] if config.get('all_args', False) else [])
+            _kwargs = config.get('default_kwargs', {}) | (kwargs if config.get('all_kwargs', False) else {key: kwargs.get(key, value) for key, value in config.get('default_kwargs', {}).items()})
+            # print(f"{Cs.__name__} : {config = }")
+            # print(f"{Cs.__name__} : {_args = }")
+            # print(f"{Cs.__name__} : {_kwargs = }")
+            Cs.__init__(self, *_args, **_kwargs)
+
+    # Create the class with type
+    return type('_Cs', bases, {'__slots__': slots, '__init__': init})
