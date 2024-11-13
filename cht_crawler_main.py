@@ -2,7 +2,7 @@ import importlib
 import app.data.source_contracts
 import app.data.source_items
 import app.data.source_MSG_Reports
-from app.viewmodels.crawlers_defs import * 
+from app.viewmodels.cht_crawlers import * 
 from app.config import *
 
 def convert_string_to_dict(input_string):

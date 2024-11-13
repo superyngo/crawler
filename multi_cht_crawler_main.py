@@ -1,10 +1,10 @@
 import importlib
+import app.data.source_MSG_Reports
 import app.data.source_contracts
 import app.data.source_items
-import app.data.source_MSG_Reports
-from app.viewmodels.crawlers_defs import * 
 from app.config import *
-
+from app.viewmodels.cht_crawlers import cht_multi_crawler
+from app.utils.common import fn_log
 def convert_string_to_dict(input_string):
   result = {}
   current_key = ''
@@ -34,10 +34,39 @@ def convert_string_to_dict(input_string):
 
   return result
 
-def main():
-  CsMultiCHTCrawler = cs_factory(dic_cs_cht_multi_crawler_config)
-  cht_multi_crawler = CsMultiCHTCrawler()
+configs = {
+    'EPIS_contract_batch' : {
+      'source' : lst_source_contracts,
+      'task' : 'EPIS_contract_batch',
+      'threads' : 2
+    },
+    'EPIS_contract_info_items':{
+      'source' : lst_source_contracts,
+      'task' : 'EPIS_contract_info_items',
+      'threads' : 2
+    },
+    'MASIS_barcode' : {
+      'source' : {"23B12A2491":["1","2",3,4,5]},
+      'task' : 'MASIS_barcode',
+      'threads' : 2
+    },
+    'MASIS_item_detail' : {
+      'source' : lst_items,
+      'task' : 'MASIS_item_detail',
+      'threads' : 1
+    },
+    'MSG' : {
+      'source' : lst_source_MSG_reports,
+      'task' : 'MSG',
+      'threads' : 1
+    },
+    'MASIS_InvQry' : {
+      'source' : ['50503', '59511', '59512', '59521', '59531'],
+      'task' : 'MASIS_InvQry',
+      'threads' : 1
+  }}
 
+def main():
   handle_stop = False
   while not handle_stop:
     importlib.reload(app.data.source_contracts)
@@ -50,37 +79,6 @@ def main():
     # lst_source_contracts = ["23S13A0041","23R13A0051"]
     # lst_items = ["02502735","21190613"]
     # lst_source_MSG_reports = [{'name' : 'RS4212RA4L','postfix' : '50502'}] # {'name' : 'RS5203A' , 'prefix' : '20240110'} 
-    configs = {
-        'EPIS_contract_batch' : {
-          'source' : lst_source_contracts,
-          'task' : 'EPIS_contract_batch',
-          'threads' : 2
-        },
-        'EPIS_contract_info_items':{
-          'source' : lst_source_contracts,
-          'task' : 'EPIS_contract_info_items',
-          'threads' : 2
-        },
-        'MASIS_barcode' : {
-          'source' : {"23B12A2491":["1","2",3,4,5]},
-          'task' : 'MASIS_barcode',
-          'threads' : 2
-        },
-        'MASIS_item_detail' : {
-          'source' : lst_items,
-          'task' : 'MASIS_item_detail',
-          'threads' : 1
-        },
-        'MSG' : {
-          'source' : lst_source_MSG_reports,
-          'task' : 'MSG',
-          'threads' : 1
-        },
-        'MASIS_InvQry' : {
-          'source' : ['50503', '59511', '59512', '59521', '59531'],
-          'task' : 'MASIS_InvQry',
-          'threads' : 1
-      }}
     tasks = convert_string_to_dict(input(f"tasks:\n {"\n ".join(configs.keys())}\nor stop:"))
     print(f"input tasks: {set(tasks)}")
     # config = tasks['config'] if 'config' in 

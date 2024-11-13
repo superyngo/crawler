@@ -7,10 +7,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.select import Select
 from selenium.common.exceptions import UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, NoAlertPresentException, JavascriptException
 from types import MethodType
+from typing import Self
 
-
-class CsMyDriverComponent:
-    def _select_change_value(self, By_locator: str, locator: str, new_value: str) -> None:
+class CsMyDriverComponent: 
+    def _select_change_value(self:Self, By_locator: str, locator: str, new_value: str) -> None:
         _select_element = WebDriverWait(self, 20).until(EC.element_to_be_clickable((By_locator, locator)))
         _select_element = Select(_select_element)  # Create a Select instance
         _select_element.select_by_value(new_value)

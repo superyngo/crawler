@@ -1,5 +1,6 @@
 
-from app.viewmodels.bin import *
+from app.utils.my_driver import *
+from app.models.models import CsBasicComponent
 from selenium.webdriver.common.by import By
 import time, ast
 from app.services.db_manager import DatabaseManager
@@ -703,9 +704,12 @@ class CsChtCrawlerComponent:
         self._login_cht = False
 # class factory
 
+dict[type, dict[str, list | dict ]]
+
+
 dic_cs_cht_crawler_config = {
-    webdriver.Edge: None,
     CsBasicComponent: None,
+    webdriver.Edge: None,
     CsMyDriverComponent: None,
     CsMyEdgeDriverInit: {
         'default_args': ["./profiles/userA"]
@@ -732,5 +736,5 @@ dic_cs_cht_multi_crawler_config = {
     CsMultiLoaderEntry: {}
 }
 
-
-
+CsMultiCHTCrawler = cs_factory(dic_cs_cht_multi_crawler_config)
+cht_multi_crawler = CsMultiCHTCrawler()
