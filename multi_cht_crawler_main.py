@@ -2,8 +2,9 @@ import importlib
 import app.data.source_MSG_Reports
 import app.data.source_contracts
 import app.data.source_items
+import ast
 from app.config import *
-from app.viewmodels.cht_crawlers import cht_multi_crawler
+from app.viewmodels.cht_crawlers import CsMultiCHTCrawler
 from app.utils.common import fn_log
 def convert_string_to_dict(input_string):
   result = {}
@@ -34,7 +35,22 @@ def convert_string_to_dict(input_string):
 
   return result
 
-configs = {
+
+def main():
+  cht_multi_crawler = CsMultiCHTCrawler()
+  handle_stop = False
+  while not handle_stop:
+    importlib.reload(app.data.source_contracts)
+    importlib.reload(app.data.source_items)
+    importlib.reload(app.data.source_MSG_Reports)
+    from app.data.source_contracts import lst_source_contracts
+    from app.data.source_items import lst_items
+    from app.data.source_MSG_Reports import lst_source_MSG_reports
+    # test
+    # lst_source_contracts = ["23S13A0041","23R13A0051"]
+    # lst_items = ["02502735","21190613"]
+    # lst_source_MSG_reports = [{'name' : 'RS4212RA4L','postfix' : '50502'}] # {'name' : 'RS5203A' , 'prefix' : '20240110'} 
+    configs = {
     'EPIS_contract_batch' : {
       'source' : lst_source_contracts,
       'task' : 'EPIS_contract_batch',
@@ -53,7 +69,7 @@ configs = {
     'MASIS_item_detail' : {
       'source' : lst_items,
       'task' : 'MASIS_item_detail',
-      'threads' : 1
+      'threads' : 4
     },
     'MSG' : {
       'source' : lst_source_MSG_reports,
@@ -63,22 +79,9 @@ configs = {
     'MASIS_InvQry' : {
       'source' : ['50503', '59511', '59512', '59521', '59531'],
       'task' : 'MASIS_InvQry',
-      'threads' : 1
+      'threads' : 2
   }}
 
-def main():
-  handle_stop = False
-  while not handle_stop:
-    importlib.reload(app.data.source_contracts)
-    importlib.reload(app.data.source_items)
-    importlib.reload(app.data.source_MSG_Reports)
-    from app.data.source_contracts import lst_source_contracts
-    from app.data.source_items import lst_items
-    from app.data.source_MSG_Reports import lst_source_MSG_reports
-    # test
-    # lst_source_contracts = ["23S13A0041","23R13A0051"]
-    # lst_items = ["02502735","21190613"]
-    # lst_source_MSG_reports = [{'name' : 'RS4212RA4L','postfix' : '50502'}] # {'name' : 'RS5203A' , 'prefix' : '20240110'} 
     tasks = convert_string_to_dict(input(f"tasks:\n {"\n ".join(configs.keys())}\nor stop:"))
     print(f"input tasks: {set(tasks)}")
     # config = tasks['config'] if 'config' in 

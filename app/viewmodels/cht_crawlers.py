@@ -1,5 +1,6 @@
 
 from app.utils.my_driver import *
+from app.utils.composer import *
 from app.models.models import CsBasicComponent
 from selenium.webdriver.common.by import By
 import time, ast
@@ -440,7 +441,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                 return
             fn_log(f"{self._index}:{len(lst_result_items_detail)} items data fetched")
             with DatabaseManager(DB_PATH) as db:
-                lst_sql_columns = ['材料編號', '材料名稱', '材料分類1', '材料分類2', '材料分類3', '計量單位', '追蹤週期', '導入條碼', 'EAN', '管理人員', '建檔日期', '異動日期']
+                lst_sql_columns = ['材料編號', '材料名稱', '材料分類1', '材料分類2', '材料分類3', '計量單位', '追蹤週期', '導入條碼', 'EAN', '管理人員', '建檔日期', '異動日期', 'CPE', '掃碼', '歸屬機構']
                 db.write_db(dbname=_task_name, columns=lst_sql_columns , records=lst_result_items_detail)
                 fn_log(f"{self._index}:{len(lst_result_items_detail)} items data saved to db {_task_name}")
         def MASIS_item_detail_query_item(self, item)->list:
@@ -461,8 +462,11 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             str_管理人員 = self._wait_element(By.ID, 'ContentPlaceHolder1_lbController').text
             str_建檔日期 = self._wait_element(By.ID, 'ContentPlaceHolder1_lbCrDt').text
             str_異動日期 = self._wait_element(By.ID, 'ContentPlaceHolder1_lbUpDt').text
+            bool_CPE = True if self._wait_element(By.ID, 'ContentPlaceHolder1_RbCpeY').get_attribute('checked') else False
+            bool_掃碼 = True if self._wait_element(By.ID, 'ContentPlaceHolder1_rbBarcodeY').get_attribute('checked') else False
+            str_歸屬機構 = self._try_wait_extract_element_value(By.NAME, 'ctl00$ContentPlaceHolder1$OrgCtrl$ctl00')
             self.back()
-            return [str_材料名稱, str_材料分類1, str_材料分類2, str_材料分類3, str_計量單位, str_追蹤週期, str_導入條碼, str_EAN, str_管理人員, str_建檔日期, str_異動日期]
+            return [str_材料名稱, str_材料分類1, str_材料分類2, str_材料分類3, str_計量單位, str_追蹤週期, str_導入條碼, str_EAN, str_管理人員, str_建檔日期, str_異動日期, bool_CPE, bool_掃碼, str_歸屬機構]
         return vars()
         def useless(self):
             # Save the DataFrame to a excel file
@@ -704,7 +708,6 @@ class CsChtCrawlerComponent:
         self._login_cht = False
 # class factory
 
-dict[type, dict[str, list | dict ]]
 
 
 dic_cs_cht_crawler_config = {
@@ -737,4 +740,5 @@ dic_cs_cht_multi_crawler_config = {
 }
 
 CsMultiCHTCrawler = cs_factory(dic_cs_cht_multi_crawler_config)
-cht_multi_crawler = CsMultiCHTCrawler()
+
+CsCHTCrawler = cs_factory(dic_cs_cht_crawler_config)

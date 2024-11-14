@@ -27,8 +27,8 @@ class CsMSGReport:
     name: str
     prefix: Optional[str] = None
     postfix: Optional[str] = None
-    set_report: Dict[str, str] = field(init=False)
-    set_report_attribute: Dict[str, List[str]] = field(init=False)
+    set_report: Dict[str, str] = field(default_factory=dict)
+    set_report_attribute: Dict[str, List[str]] = field(default_factory=dict)
     handle_check_online: bool = True
     show_report: bool = True
     filename: str = ""

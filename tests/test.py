@@ -1,23 +1,21 @@
-from dataclasses import dataclass, asdict
-from typing import TypedDict
+import collections
 
-# Define the TypedDict for type hints
-class PersonDict(TypedDict):
-    name: str
-    age: int
+def worker(f):
+    tasks = collections.deque()
+    value = None
+    while True:
+        batch = yield value
+        value = None
+        if batch is not None:
+            tasks.extend(batch)
+        else:
+            if tasks:
+                args = tasks.popleft()
+                value = f(*args)
 
-# Define the dataclass
-@dataclass
-class Person:
-    name: str
-    age: int
-
-    # Method to convert dataclass to dictionary
-    def to_dict(self) -> PersonDict:
-        return asdict(self)  # Returns a dictionary representation
-
-# Example usage
-person_instance = Person(name="Alice", age=30)
-person_dict: PersonDict = person_instance.to_dict()
-
-print(person_dict)  # Output: {'name': 'Alice', 'age': 30}
+w = worker(str)
+w.send(None)
+w.send([(1,), (2,), (3,)])
+# w.throw(ValueError)
+w.close()
+next(w)

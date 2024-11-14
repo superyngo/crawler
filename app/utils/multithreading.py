@@ -2,7 +2,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 from queue import Empty as QueueEmpty
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 from app.utils.common import fn_log 
 
 
@@ -19,8 +19,8 @@ def split_list(input_list:list, num:int=1):
         result[i % num].append(val)
     return result
 
-def split_to_dict(source:any, num:int=1) -> dict[int, any]:
-    def _list(_list, num:int=1)->dict[int, any]:
+def split_to_dict(source:Any, num:int=1) -> dict[int, Any]:
+    def _list(_list, num:int=1)->dict[int, Any]:
         if len(_list) < num:
             num=len(_list)
         # Create a dictionary with empty lists for each key
@@ -48,7 +48,7 @@ def split_to_queue(source: Any) -> Queue:
         raise TypeError("source must be type list, tuple, or dictionary")
     return q
 
-def worker(queue: Queue, call_def: Callable, args: list, kwargs: dict, index: int):
+def worker(queue: Queue, call_def: Callable, args: tuple[Any], kwargs: dict, index: int):
     """Thread worker function to process items in the queue."""
     while not queue.empty():
         try:
@@ -57,8 +57,6 @@ def worker(queue: Queue, call_def: Callable, args: list, kwargs: dict, index: in
             # fn_log(f"{index}: Processing item: {item}")
 
             item = queue.get()  # Blocking get
-            fn_log(f"{index}: Remaining items: {queue.qsize()}")
-            fn_log(f"{index}: Processing item: {item}")
 
             # Set up kwargs for the function call
             if isinstance(item, tuple):  # For dictionaries, item will be (key, value)
@@ -69,12 +67,14 @@ def worker(queue: Queue, call_def: Callable, args: list, kwargs: dict, index: in
             # Execute the provided function
             call_def(*args, **kwargs)
             queue.task_done()  # Ensure this item is marked as done
+            fn_log(f"{index}: Remaining items: {queue.qsize()}")
+            fn_log(f"{index}: Processing item: {item}")
         except QueueEmpty:
             fn_log("{index}: No remaining items.")
             break  # Exit if the queue is empty
 
-def multithreading(call_def:Callable, source:any=None, threads:int=1, args:list=None, kwargs:dict=None):
-    if args is None: args = []
+def multithreading(call_def:Callable, source:Any=None, threads:int=1, args:Optional[tuple[Any]]=None, kwargs:Optional[dict]=None):
+    if args is None: args = tuple()
     if kwargs is None: kwargs = {}
     with ThreadPoolExecutor(max_workers=threads) as executor:
         match source:

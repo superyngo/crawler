@@ -2,8 +2,9 @@ import importlib
 import app.data.source_contracts
 import app.data.source_items
 import app.data.source_MSG_Reports
-from app.viewmodels.cht_crawlers import * 
+from app.viewmodels.cht_crawlers import CsCHTCrawler
 from app.config import *
+from app.utils.common import fn_log
 
 def convert_string_to_dict(input_string):
     result = {}
@@ -35,7 +36,6 @@ def convert_string_to_dict(input_string):
     return result
 
 def main():
-  CsCHTCrawler = cs_factory(dic_cs_cht_crawler_config)
   cht_crawler = CsCHTCrawler()
 
   handle_stop = False
