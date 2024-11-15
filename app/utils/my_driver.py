@@ -6,10 +6,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.select import Select
 from selenium.common.exceptions import UnexpectedAlertPresentException, NoSuchElementException, TimeoutException, NoAlertPresentException, JavascriptException
-from typing import Self
+from abc import ABC
 
-class CsMyDriverComponent: 
-    def _select_change_value(self:Self, By_locator: str, locator: str, new_value: str) -> None:
+class CsMyDriverABC(ABC, webdriver.Edge):
+    pass
+
+class CsMyDriverComponent(CsMyDriverABC): 
+    def _select_change_value(self, By_locator: str, locator: str, new_value: str) -> None:
         _select_element = WebDriverWait(self, 20).until(EC.element_to_be_clickable((By_locator, locator)))
         _select_element = Select(_select_element)  # Create a Select instance
         _select_element.select_by_value(new_value)
@@ -45,7 +48,7 @@ class CsMyDriverComponent:
             return self._try_extract_element_value(element)
         except NoSuchElementException:
             return error_return
-class CsMyEdgeDriverInit:
+class CsMyEdgeDriverInit(CsMyDriverComponent):
     def __init__(self, user_data_dir):
         import logging
         Service = webdriver.EdgeService
@@ -59,7 +62,7 @@ class CsMyEdgeDriverInit:
         log_path = os.path.abspath("./logs/edge_driver.log")
 
         # Create directories if they don't exist
-        os.makedirs(user_data_dir, exist_ok=True)
+        # os.makedirs(user_data_dir, exist_ok=True)
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
         edge_bin = './app/bin/msedgedriver.exe'
         service_args=[
@@ -75,6 +78,8 @@ class CsMyEdgeDriverInit:
         # options.add_argument(f"user-data-dir={user_data_dir}")
         options.add_argument("--disable-notifications")
         options.add_argument("--log-level=3")
-        super(type(self),self).__init__(service=service, options=options)
+        CsMyDriverComponent.__init__(self, service=service, options=options)
         self.int_main_window_handle = self.current_window_handle
+
+
 

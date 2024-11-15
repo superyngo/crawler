@@ -1,21 +1,25 @@
 from app.utils.common import fn_log
 from app.utils.multithreading import multithreading
 from types import MethodType
-from typing import Optional, Any, Protocol, Dict, Callable
+from typing import Optional, Any, Callable, Protocol
+from abc import ABC
+
+type Components = dict[str, Any]
+type LoadableComponents = dict[str, Components]
 
 class CsLoaderComponent:
-    def __init__(self, *args, loadable_components: dict):
-        self._loadable_components = loadable_components
+    def __init__(self, *args, loadable_components: LoadableComponents):
+        self._loadable_components: LoadableComponents = loadable_components
         self._loaded_components = set()
         if args: self.load_components(*args)
     def load_components(self, *args) -> None:
         if 'ALL' in args:
-            args = set(self._loadable_components) - {'_loader_init_remove'}
+            args = set(self._loadable_components) - {'__loader__'}
         for task in args:
             if task in self._loaded_components:
                 fn_log(f"{task} has already been loaded so skip")
                 continue
-            if task in set(self._loadable_components) - {'_loader_init_remove'}:
+            if task in set(self._loadable_components) - {'__loader__'}:
                 for key, value in self._loadable_components[task].items():
                     match key:
                         case '__init__component':
@@ -26,13 +30,13 @@ class CsLoaderComponent:
                             setattr(self, key, MethodType(value, self) if callable(value) else value)
             else:
                 raise AttributeError(f"'{task}' is not a valid task for {self.__class__.__name__}, try {list(self._loadable_components.keys())} or 'ALL' ")
-            if self._loadable_components.get('_loader_init_remove'): MethodType(self._loadable_components['_loader_init_remove']['__init__loader'], self)(task)
+            if self._loadable_components.get('__loader__'): MethodType(self._loadable_components['__loader__']['__init__loader'], self)(task)
             self._loaded_components.add(task)
             fn_log(f"{task} loaded successfully")
         return None
     def remove_components(self, *args) -> None:
         if 'ALL' in args:
-            args = set(self._loadable_components) - {'_loader_init_remove'}
+            args = set(self._loadable_components) - {'__loader__'}
         for task in args:
             if task in self._loaded_components:
                 for key,value in self._loadable_components[task].items():
@@ -43,7 +47,7 @@ class CsLoaderComponent:
                             MethodType(value, self)()
                         case _:
                             if hasattr(self, key): delattr(self, key)
-                if self._loadable_components.get('_loader_init_remove'): MethodType(self._loadable_components['_loader_init_remove']['__remove__loader'], self)(task)
+                if self._loadable_components.get('__loader__'): MethodType(self._loadable_components['__loader__']['__remove__loader'], self)(task)
                 self._loaded_components.remove(task)
                 fn_log(f"{task} removed successfully")
             else:
@@ -53,21 +57,21 @@ class CsLoaderComponent:
 class CsMultiSeed:
     def __init__(self, index):
         self._index = index
-    def _close_instance(self):
-        if self._helper_driver:
-            self._helper_driver.close()
-        self.close() # depends on the instance
-        self.quit()
 
-class CsMultiManager_Protocol(Protocol):
-    _instances:dict[int, Callable]
+
+class Subclass_Ptl(Protocol):
+    _index: int
+    _close_instance: Callable
+    _loadable_components: dict
+class CsMultiManager_Ptl(Protocol):
+    _instances:dict[int, Subclass_Ptl]
     _subclass:Callable
     _sources:dict
     _args:set[Any]
     _kwargs:dict[str, Any]
 
-class CsMultiManager(CsMultiManager_Protocol):
-    def __init__(self, *args, threads, subclass, **kwargs) -> None: 
+class CsMultiManager(CsMultiManager_Ptl):
+    def __init__(self, *args, threads: int, subclass: CsMultiManager_Ptl, **kwargs) -> None: 
         for key, value in {'instances':{}, 'sources':{}, 'threads': 0, 'subclass': subclass, 'args': set(args), 'kwargs': kwargs}.items():
             setattr(self, '_' + key, value)
         # init instances
@@ -129,7 +133,7 @@ class CsMultiManager(CsMultiManager_Protocol):
                     self._instances.pop(i)
                 self._threads = threads
 
-class CsMultiLoaderEntry(CsMultiManager_Protocol):
+class CsMultiLoaderEntry(CsMultiManager):
     def __init__(self):
         if self.threads == 0: self.threads = 1
         self._instances_loadable_components = self._instances[0]._loadable_components
@@ -169,7 +173,7 @@ class CsMultiLoaderEntry(CsMultiManager_Protocol):
             else:
                 raise AttributeError(f"'{task}' components is not loaded or component {task} doesn't exists")
     def crawling_main(self, task, source:Optional[list]=None, threads:Optional[int]=None, **kwargs):
-        if source:fn_log(f"Start {task}, total source count : {len(source)}")
+        if source:fn_log(f"Start {task}, total source count: {len(source)}, total threads: {threads}")
         
         # load task
         if task not in self._args: self.load_instances_components(task, threads=threads)
@@ -199,3 +203,4 @@ class my_loader():
                     if hasattr(obj, key): delattr(obj, key)
             fn_log(f"{key} removed successfully")
 
+            

@@ -7,9 +7,11 @@ import time, ast
 from app.services.db_manager import DatabaseManager
 from app.config import DB_PATH
 from app.models.models import CsMSGReport
+from app.utils.composer import LoadableComponents, Components
+from app.utils.my_driver import CsMyDriverComponent
 
-def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
-    def MSG() -> dict[str, Any]:
+def _spit_cht_crawlers_loadable_components() -> LoadableComponents:
+    def MSG() -> Components:
         def MSG_handler(self, source:list[dict], handle_check_online: bool=True, **kwargs) -> None:
             _BASE_URL = 'https://msgrpt.cht.com.tw/RsView12/RsPortal.aspx'
             self.get(_BASE_URL)
@@ -101,7 +103,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
         return vars()
         def __init__component(self) -> None:
             print('MSG component equipped!!')
-    def MASIS_InvQry() -> dict[str, Any]:
+    def MASIS_InvQry() -> Components:
         def MASIS_InvQry_handler(self, source: list[str], **kwargs) -> None:
             _BASE_URL = 'https://masis.cht.com.tw/IV_Net/IvQry/Inv/InvQry.aspx'
             _task_name = 'MASIS_InvQry'
@@ -181,7 +183,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                     item[3] = item[3][1:-1]
             return data
         return vars()
-    def EPIS_contract_info_items() -> dict[str, Any]:
+    def EPIS_contract_info_items() -> Components:
         def EPIS_contract_info_items_handler(self, source: list[str], **kwargs):
             EPIS_contract_info_task_name, EPIS_contract_items_task_name = 'EPIS_contract_info', 'EPIS_contract_items'
             int_total = len(source)
@@ -330,7 +332,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             except TimeoutException:
                 raise TimeoutException
         return vars()
-    def MASIS_barcode() -> dict[str, Any]:
+    def MASIS_barcode() -> Components:
         def MASIS_barcode_handler(self, source: dict[str, list[Any]], **kwargs) -> None:
             _task_name = 'MASIS_barcode'
             STR_MASIS_BARCODE_URL = 'https://masis.cht.com.tw/IV_Net/IvQry/Inv/BarcodeQry.aspx'
@@ -417,7 +419,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             # df.to_excel(f'{STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH}\\{key}_{zfill_lot}.xlsx', index=False)
             # fn_log(f"{key}_{zfill_lot}.xlsx saved!! {int_finished_count} of {int_total_lots} finished")
             pass
-    def MASIS_item_detail() -> dict[str, Any]:
+    def MASIS_item_detail() -> Components:
         def MASIS_item_detail_handler(self, source: list[str], **kwargs):
             _task_name = 'MASIS_item_detail'
             _BASE_URL = 'https://masis.cht.com.tw/masis/NM/Mano/ManoMtn.aspx?t=m'
@@ -474,7 +476,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             # df.columns = ['材料編號', '材料名稱', '材料分類1', '材料分類2', '材料分類3','計量單位', '追蹤週期', '導入條碼', 'EAN', '管理人員', '建檔日期', '異動日期']
             # df.to_excel(f'{STR_DOWNLOADS_TIMESTAMP_FOLDER_PATH}\\item_detail/{STR_DATESTAMP}_items.xlsx', index=False)
             pass
-    def EPIS_contract_batch() -> dict[str, Any]:
+    def EPIS_contract_batch() -> Components:
         def EPIS_contract_batch_handler(self, source: list[str], **kwargs) -> None:
             int_total = len(source)
             int_finished_count = 0
@@ -626,7 +628,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
                         db.execute_many(insert_replace_sql , value)
                         fn_log(f"{self._index}: {contract} {key} saved to db {tablename}")
         return vars()
-    def sharepoint() -> dict[str, Any]:
+    def sharepoint() -> Components:
         _sharepoint_base_url = 'https://cht365.sharepoint.com/sites/msteams_e919c5/Shared Documents/General/存控/0_DB/'
         def sharepoint_check_online(self, source: CsMSGReport, **kwargs) ->bool:
             self.get(f"{self._sharepoint_base_url}{source.name}/")
@@ -654,13 +656,13 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
             self.get(self._sharepoint_base_url)
             self._wait_element(By.XPATH, '//span[text()="供三採購駐點"]')
         return vars()
-    def google() -> dict[str, Any]:
+    def google() -> Components:
         def google_handler(self):
             self.get('https://google.com')
         def __init__component(self, *args, **kwargs):
             self.get('https://google.com')
         return vars()
-    def _loader_init_remove() -> dict[str, Any]:
+    def __loader__() -> Components:
         def __init__loader(self, task) -> None:
             if task not in ['sharepoint', 'google']: self.login_cht()
         def __remove__loader(self, task) -> None:
@@ -669,7 +671,7 @@ def _spit_cht_crawlers_loadable_components() -> dict[str, dict[str, Any]]:
         return vars()
     return {key: func() for key, func in vars().items()}
 
-class CsChtCrawlerComponent:
+class CsChtCrawlerComponent(CsMyDriverComponent):
     def login_cht(self) -> object:
         if not self._login_cht:
             fn_log('Please login to CHT')
@@ -703,6 +705,12 @@ class CsChtCrawlerComponent:
                 return self._try_extract_element_value(target_element)
         except NoSuchElementException:
             return error_return
+    def _close_instance(self):
+        if self._helper_driver:
+            self._helper_driver.close()
+        self.close() # depends on the instance
+        self.quit()
+
     def __init__(self):
         self._helper_driver = None
         self._login_cht = False
@@ -726,19 +734,17 @@ dic_cs_cht_crawler_config = {
         'default_kwargs':{'index': 0}        
     },
 }
+CsCHTCrawler = cs_factory(dic_cs_cht_crawler_config)
 
 dic_cs_cht_multi_crawler_config = {
     CsMultiManager: {
         'all_args': True,
         'all_kwargs': True,
         'default_kwargs': {
-            'threads': 1,
-            'subclass': cs_factory(dic_cs_cht_crawler_config),
+            'threads': 0,
+            'subclass': CsCHTCrawler,
         }
     },
     CsMultiLoaderEntry: {}
 }
-
 CsMultiCHTCrawler = cs_factory(dic_cs_cht_multi_crawler_config)
-
-CsCHTCrawler = cs_factory(dic_cs_cht_crawler_config)

@@ -59,7 +59,7 @@ def main():
     'EPIS_contract_info_items':{
       'source' : lst_source_contracts,
       'task' : 'EPIS_contract_info_items',
-      'threads' : 2
+      'threads' : 3
     },
     'MASIS_barcode' : {
       'source' : {"23B12A2491":["1","2",3,4,5]},
