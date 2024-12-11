@@ -365,15 +365,19 @@ def _spit_cht_crawlers_loadable_components() -> LoadableComponents:
                         fn_log(f"{self._index}:{key} {zfill_lot} has no barcode. {int_finished_count} of {int_total_lots} finished")
                         continue
         def _MASIS_barcode_query_lot(self, zfill_lot: str) -> list[list[str]]:
-            # Input Lot No.
-            self._input_send_keys(By.ID, 'ContentPlaceHolder1_txtLotNo', zfill_lot)
-            # Query
             try:
-                self._wait_element(By.ID,'ContentPlaceHolder1_btnQry').click()
+                # Input Lot No.
+                self._input_send_keys(By.ID, 'ContentPlaceHolder1_txtLotNo', zfill_lot)
                 time.sleep(1) # Adjust the delay as needed
+                # Query
+                self.find_element(By.ID,'ContentPlaceHolder1_btnQry').click()
                 _check_alert = self.current_url
+                if self.find_element(By.XPATH, "//script[contains(text(), \"alert('作業訊息:查無相關資料!');\")]"):
+                    raise UnexpectedAlertPresentException
             except UnexpectedAlertPresentException:
                 raise UnexpectedAlertPresentException
+            except NoSuchElementException:
+                pass
             # Wait rendering
             str_pages_info = self._wait_element(By.ID, 'ContentPlaceHolder1_lbGvCount').text
             int_total_pages = int(re.findall(r'共(.*?)頁', str_pages_info)[0])
